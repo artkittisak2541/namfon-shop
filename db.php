@@ -1,20 +1,32 @@
 <?php
 if ($_SERVER['HTTP_HOST'] === 'localhost') {
+  // 👉 ใช้งานบนเครื่องเรา (XAMPP)
   $host = "localhost";
-  $user = "postgres";
-  $pass = "1234";
+  $user = "root";
+  $pass = "";
   $dbname = "shop_db";
-  $port = "5432";
-} else {
-  $host = "dpg-xxxxx.singapore-postgres.render.com"; // ✅ จาก Render
-  $user = "namfonshop_db_user"; // ✅ จาก Render
-  $pass = "gObGj49w4TEsZlZzGhNLzzXhQWKJH8eC"; // ✅ จาก Render
-  $dbname = "namfonshop_db"; // ✅ จาก Render
-  $port = "5432";
-}
 
-$conn = pg_connect("host=$host dbname=$dbname user=$user password=$pass port=$port");
-if (!$conn) {
-  die("❌ Connection failed: " . pg_last_error());
+  $conn = new mysqli($host, $user, $pass, $dbname);
+  if ($conn->connect_error) {
+    die("❌ MySQL Connection failed (localhost): " . $conn->connect_error);
+  }
+
+  $conn->set_charset("utf8mb4");
+} else {
+  // 👉 ใช้งานบน Render (PostgreSQL)
+  $host = "dpg-d23o6nadbo4c7383o6qg-a";
+  $dbname = "namfonshop_db";
+  $user = "namfonshop_db_user";
+  $pass = "gObGj49w4TEsZlZzGhNLzzXhQWKJH8eC";
+  $port = "5432";
+
+  // 🔌 เชื่อมต่อ PostgreSQL
+  $conn = pg_connect("host=$host dbname=$dbname user=$user password=$pass port=$port");
+
+  if (!$conn) {
+    die("❌ PostgreSQL Connection failed (Render): " . pg_last_error());
+  }
+
+  pg_query($conn, "SET client_encoding TO 'UTF8'");
 }
 ?>
