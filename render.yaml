@@ -3,6 +3,6 @@ services:
     name: namfon-shop
     env: docker
     plan: free
-    repo: https://github.com/artkittisak2541/namfonshop_db
+    repo: https://github.com/artkittisak2541/namfon-shop
     branch: main
     dockerfilePath: Dockerfile
