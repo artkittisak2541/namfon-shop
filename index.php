@@ -1,24 +1,26 @@
 <?php
-
 session_start();
 require 'db.php';
-
 if (isset($_SESSION['user'])) {
   header("Location: shop.php");
   exit();
 }
-
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $username = $_POST['username'];
   $password = $_POST['password'];
   $remember = isset($_POST['remember']);
 
-  $stmt = $conn->prepare("SELECT * FROM users WHERE username = ?");
-  $stmt->bind_param("s", $username);
-  $stmt->execute();
-  $result = $stmt->get_result();
-  $user = $result->fetch_assoc();
+  if (DB_TYPE === 'mysql') {
+    $stmt = $conn->prepare("SELECT * FROM users WHERE username = ?");
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $user = $result->fetch_assoc();
+  } else {
+    $result = pg_query_params($conn, "SELECT * FROM users WHERE username = $1", [$username]);
+    $user = pg_fetch_assoc($result);
+  }
 
   if ($user && password_verify($password, $user['password'])) {
     $_SESSION['user'] = $user;
@@ -30,10 +32,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header("Location: shop.php");
     exit();
   } else {
-    $error = "❌ ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง";
+    $error = $user ? "❌ รหัสผ่านไม่ถูกต้อง" : "❌ ไม่พบผู้ใช้นี้";
   }
 }
 ?>
+
+<!-- ส่วน HTML+CSS+JS อยู่ใน reply ถัดไป (ยาวเกิน 1 ข้อความ) -->
+
 
 <!-- HTML and CSS content omitted for brevity (included in next cell in full version) -->
 
