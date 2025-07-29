@@ -8,16 +8,39 @@ if (!isset($_SESSION['user'])) {
 }
 
 $search = $_GET['search'] ?? '';
-if ($search) {
-  $stmt = $conn->prepare("SELECT * FROM products WHERE name LIKE ?");
-  $like = "%$search%";
-  $stmt->bind_param("s", $like);
-  $stmt->execute();
-  $result = $stmt->get_result();
+
+if (DB_TYPE === 'mysql') {
+  if ($search) {
+    $like = "%$search%";
+    $stmt = $conn->prepare("SELECT * FROM products WHERE name LIKE ?");
+    $stmt->bind_param("s", $like);
+    $stmt->execute();
+    $result = $stmt->get_result();
+  } else {
+    $result = $conn->query("SELECT * FROM products");
+  }
 } else {
-  $result = $conn->query("SELECT * FROM products");
+  if ($search) {
+    $like = "%$search%";
+    $result = pg_query_params($conn, "SELECT * FROM products WHERE name ILIKE $1", [$like]);
+  } else {
+    $result = pg_query($conn, "SELECT * FROM products");
+  }
+}
+
+// 🔄 รวมข้อมูลสินค้าไว้ใน $products
+$products = [];
+if (DB_TYPE === 'mysql') {
+  while ($row = $result->fetch_assoc()) {
+    $products[] = $row;
+  }
+} else {
+  while ($row = pg_fetch_assoc($result)) {
+    $products[] = $row;
+  }
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -151,7 +174,8 @@ if ($search) {
   </form>
 
   <div class="row">
-    <?php while ($row = $result->fetch_assoc()): ?>
+   <?php foreach ($products as $row): ?>
+
     <div class="col-12 col-sm-6 col-md-4 col-lg-3">
       <div class="product animate__animated animate__zoomIn">
         <?php if ($row['tag']): ?>
@@ -173,7 +197,7 @@ if ($search) {
         </form>
       </div>
     </div>
-    <?php endwhile; ?>
+    <?php endforeach; ?>
   </div>
 
   <div class="text-center mt-4">
